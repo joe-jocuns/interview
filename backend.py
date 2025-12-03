@@ -2,6 +2,8 @@ from flask import Flask, request, jsonify, render_template
 import random
 import datetime
 import string
+import requests
+import uuid
 
 app = Flask(__name__)
 
@@ -9,44 +11,50 @@ payments = []
 
 characters = string.ascii_letters + string.digits
 
-def random_date_string():
+def callMockBank(amount, memo):
+    try:
+        response = requests.post("http://localhost:5002/process", json={"amount": amount, "memo": memo})
+        print("Called mock bank")
+        return response.json()
+    except Exception as e:
+        print("Error contacting mock bank:", e)
+        return {"status": "declined", "transactionId": None}
+    
+
+
+def randomDateString():
     start = datetime.datetime(2025, 1, 1)
     end = datetime.datetime.now()
-    delta = end - start;
+    delta = end - start
     seconds = random.randint(0, int(delta.total_seconds()))
-    random_date = start + datetime.timedelta(seconds=seconds)
-    return random_date.isoformat()
+    randomDate = start + datetime.timedelta(seconds=seconds)
+    return randomDate.isoformat()
 
-def seed_data():
-    for i in range(1,100):
+def seedData():
+    for i in range(1, 101):
         payments.append({
-            "transactionId": f"{i}_{''.join(random.choice(characters) for _ in range(4))}",
+            "transactionId": str(uuid.uuid4()),
             "memo": ''.join(random.choice(characters) for _ in range(10)),
             "amount": random.randint(200, 1000),
-            "status": random.choice(["Success", "Declined"]),
-            "timestamp": random_date_string()
+            "status": random.choice(["success", "declined"]),
+            "timestamp": randomDateString()
         })
 
+seedData()
 
-
-seed_data()
-
-
-def add_payment_record(amount, memo):
+def addPaymentRecord(amount, memo):
     payments.append({
         "transactionId": f"{len(payments)}_{''.join(random.choice(characters) for _ in range(4))}",
         "memo": memo,
         "amount": amount,
-        "status": "Success",
+        "status": random.choice(["success", "declined"]),
         "timestamp": datetime.datetime.now().isoformat()
     })
-    print("Added Payment")
-
+    print("Added payment")
 
 @app.route('/')
 def home():
     return render_template('index.html')
-
 
 @app.route('/payments', methods=['POST'])
 def add_payment_route():
@@ -56,13 +64,22 @@ def add_payment_route():
     if not amount or not memo:
         return jsonify({"error": "Amount and memo required"}), 400
 
-    add_payment_record(amount, memo)
+    bank_result = callMockBank(amount, memo)
 
-    return jsonify({"message": "Payment added"}), 201
+    payments.append({
+        "transactionId": bank_result["transactionId"],
+        "memo": memo,
+        "amount": amount,
+        "status": bank_result["status"],
+        "timestamp": datetime.datetime.now().isoformat()
+    })
+
+    print(f"Payment attempt: {memo}, {amount}, status: {bank_result['status']}")
+    return jsonify(bank_result), 201
 
 
 @app.route('/payments', methods=['GET'])
-def list_payments():
+def listPayments():
     return jsonify(payments)
 
 if __name__ == '__main__':
