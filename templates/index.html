@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JoeBank</title>
+
+   
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <h1>Welcome to JoeBank</h1>
+
+    <div>
+        <h2>Add Payment</h2>
+
+        <label>Amount:</label>
+        <input id="amountInput" type="number">
+        <br><br>
+
+        <label>Memo:</label>
+        <input id="memoInput" type="text">
+        <br><br>
+        <div id="lastSubmitted" ></div>
+        <br><br>
+        <button onclick="submitPayment()">Submit</button>
+    </div>
+
+    <hr>
+
+    <div>
+        <h2>Transactions</h2>
+        <button>sort</button>
+        <div>
+    <h2>Transactions</h2>
+
+    <label>Sort By:</label>
+    <select id="sortSelect" onchange="loadPayments()">
+        <option value="timestamp_desc">Newest First</option>
+        <option value="timestamp_asc">Oldest First</option>
+        <option value="amount_desc">Amount (High → Low)</option>
+        <option value="amount_asc">Amount (Low → High)</option>
+        <option value="memo_asc">Memo (A → Z)</option>
+        <option value="memo_desc">Memo (Z → A)</option>
+    </select>
+
+    <div id="transactions"></div>
+</div>
+
+  </select>
+        <div id="transactions"></div>  
+    </div>
+
+   
+    <script src="/static/script.js"></script>
+</body>
+</html>
